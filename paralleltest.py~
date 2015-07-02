@@ -39,5 +39,6 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 if rank==0:
 	result = np.dot(np.conj(l).T,l)
+	print result
 	print("Consistency check, these numbers should be small:",np.sum(a_orig-result))
 

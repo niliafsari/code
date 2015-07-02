@@ -37,7 +37,7 @@ def toeplitz_blockschur(a,b,pad):
 		g2[:,j*b:(j+1)*b]= -np.dot(inv(c),a[0:b,j*b:(j+1)*b]) 
 		g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]
 	l[0:b,0:n*b] = g1 
-	for i in xrange( 1,n+n*pad):
+	for i in xrange( 1,n + n*pad):
 		start_g1=0
 		end_g1=min(n*b,(n+n*pad-i)*b)
 		start_g2=i*b

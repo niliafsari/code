@@ -16,6 +16,6 @@ result = np.dot(l,np.conj(l).T)
 print("Consistency check, these numbers should be small:",np.sum(A-result[0:512,0:512]))
 
 # 1-d case
-l=toeplitz_blockschur(np.conj(a[:,0:1].T),1,2)
+l=toeplitz_blockschur(np.conj(a[:,0:1].T),1,0)
 result = np.dot(np.conj(l).T,l)
 print("Consistency check, these numbers should be small:",np.sum(A-result[0:512,0:512]))

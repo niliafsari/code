@@ -13,8 +13,7 @@ def block_toeplitz_par(a,b):
 #for simulated data that the first matrix is toeplitz
 #c=toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist())
   if rank==0:
-	  #c=myBlockChol(a[0:b,0:b],1)
-	  c=toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist())
+	  c=myBlockChol(a[0:b,0:b],1)
 	  for j in xrange(0,n): 
 	       g2[:,j*b:(j+1)*b]= -np.dot(inv(c),a[0:b,j*b:(j+1)*b]) 
 	       g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]

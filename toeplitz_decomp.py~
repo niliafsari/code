@@ -37,16 +37,13 @@ def toeplitz_blockschur(a,b,pad):
 		g2[:,j*b:(j+1)*b]= -np.dot(inv(c),a[0:b,j*b:(j+1)*b]) 
 		g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]
 	l[0:b,0:n*b] = g1 
-	for i in xrange( 1,n+n*pad):
+	for i in xrange( 1,n + n*pad):
 		start_g1=0
 		end_g1=min(n*b,(n+n*pad-i)*b)
-		#start_g2=max(0,(i-n*pad)*b)
 		start_g2=i*b
 		if (i<n*pad+1):
 			g2=np.append(g2,np.zeros(shape=(b,b)),axis=1)
 		end_g2=end_g1+i*b
-		print g2.shape, end_g2-start_g2,end_g1-start_g1
-		#end_g2=n*b
 		for j in xrange(0,b):
 			sigma=np.dot(np.conj(g2[:,start_g2+j].T),g2[:,start_g2+j])
 			alpha=-np.sign(g1[j,start_g1+j])*np.sqrt(g1[j,start_g1+j]**2 - sigma)
