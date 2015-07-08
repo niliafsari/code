@@ -39,6 +39,7 @@ def toeplitz_blockschur(a,b,pad):
 	l[0:b,0:n*b] = g1 
 	for i in xrange( 1,n + n*pad):
 		start_g1=0
+		print i
 		end_g1=min(n*b,(n+n*pad-i)*b)
 		start_g2=i*b
 		if (i<n*pad+1):
