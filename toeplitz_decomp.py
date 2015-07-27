@@ -39,7 +39,6 @@ def toeplitz_blockschur(a,b,pad):
 	l[0:b,0:n*b] = g1 
 	for i in xrange( 1,n + n*pad):
 		start_g1=0
-		print i
 		end_g1=min(n*b,(n+n*pad-i)*b)
 		start_g2=i*b
 		if (i<n*pad+1):
@@ -50,9 +49,14 @@ def toeplitz_blockschur(a,b,pad):
 			alpha=-np.sign(g1[j,start_g1+j])*np.sqrt(g1[j,start_g1+j]**2 - sigma)
 			z=g1[j,start_g1+j]+alpha
 			x2=-np.copy(g2[:,start_g2+j])/np.conj(z)
-			beta=(2*z*np.conj(z))/(np.conj(z)*z-sigma)
-			g1[j,start_g1+j]=-alpha
-			g2[:,start_g2+j]=0
+			beta=(2*z*np.conj(z))/(np.conj(z)*z-sigma)		
+			if np.count_nonzero(g2[:,start_g2+j])==0:
+				beta=0
+				g2[:,start_g2+j+1:end_g2]=-g2[:,start_g2+j+1:end_g2]
+				continue
+			else:
+				g2[:,start_g2+j]=0
+				g1[j,start_g1+j]=-alpha
 			v=np.copy(g1[j,start_g1+j+1:end_g1]+np.dot(np.conj(x2.T),g2[:,start_g2+j+1:end_g2]))
 			g1[j,start_g1+j+1:end_g1]=g1[j,start_g1+j+1:end_g1]-beta*v
 			v=np.reshape(v,(1,v.shape[0]))

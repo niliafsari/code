@@ -34,7 +34,7 @@ def block_toeplitz_par(a,b,pad):
 		l[0:b,0:n*b]=np.concatenate(data, axis=1)
 	global_start_g1=0
 	for i in xrange( 1,n + n*pad):    
-		global_end_g1=min(n*b,(n+n*pad-i+1)*b)
+		global_end_g1=min(n*b,(n+n*pad-i)*b)
 		start_g1=start
 		if (global_end_g1<end and start<global_end_g1):
 			end_g1=global_end_g1	
@@ -66,14 +66,15 @@ def block_toeplitz_par(a,b,pad):
 			g0_2=comm.bcast(g0_2,root=0)
 			if empty:
 				continue
-			if g0_2.all()==0:
-				g2[:,0:length_g]=-g2[:,0:length_g]
-				continue		
+			#if g0_2.all()==0:
+			#	g2[:,0:length_g]=-g2[:,0:length_g]
+			#	continue		
 			sigma=np.dot(np.conj(g0_2.T),g0_2)
 			alpha=-np.sign(g0_1)*np.sqrt(g0_1**2.0 - sigma)
 			z=g0_1+alpha
 			x2=-np.copy(g0_2)/np.conj(z)
 			beta=(2*z*np.conj(z))/(np.conj(z)*z-sigma)
+			print beta
 			if rank==0 :
 				g1[j,j]=-alpha
 				g2[:,j]=0
