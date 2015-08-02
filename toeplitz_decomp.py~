@@ -27,12 +27,13 @@ def toeplitz_decomp(a):
 	return l
 def toeplitz_blockschur(a,b,pad):
 	n=a.shape[1]/b
+	print n
 	g1=np.zeros(shape=(b,n*b), dtype=complex)
 	g2=np.zeros(shape=(b,n*b), dtype=complex)
 	l=np.zeros(shape=((n+n*pad)*b,(n+n*pad)*b), dtype=complex)
 	#for simulated data that the first matrix is toeplitz
-	c=toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist())
-	#c=myBlockChol(a[0:b,0:b],1)
+	#c=toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist())
+	c=myBlockChol(a[0:b,0:b],1)
 	for j in xrange(0,n): 
 		g2[:,j*b:(j+1)*b]= -np.dot(inv(c),a[0:b,j*b:(j+1)*b]) 
 		g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]
@@ -47,14 +48,15 @@ def toeplitz_blockschur(a,b,pad):
 		for j in xrange(0,b):
 			sigma=np.dot(np.conj(g2[:,start_g2+j].T),g2[:,start_g2+j])
 			alpha=-np.sign(g1[j,start_g1+j])*np.sqrt(g1[j,start_g1+j]**2 - sigma)
-			z=g1[j,start_g1+j]+alpha
-			x2=-np.copy(g2[:,start_g2+j])/np.conj(z)
-			beta=(2*z*np.conj(z))/(np.conj(z)*z-sigma)		
+			z=g1[j,start_g1+j]+alpha	
 			if np.count_nonzero(g2[:,start_g2+j])==0:
 				beta=0
+				g1[j,start_g1+j]=-alpha
 				g2[:,start_g2+j+1:end_g2]=-g2[:,start_g2+j+1:end_g2]
 				continue
 			else:
+				x2=-np.copy(g2[:,start_g2+j])/np.conj(z)
+				beta=(2*z*np.conj(z))/(np.conj(z)*z-sigma)	
 				g2[:,start_g2+j]=0
 				g1[j,start_g1+j]=-alpha
 			v=np.copy(g1[j,start_g1+j+1:end_g1]+np.dot(np.conj(x2.T),g2[:,start_g2+j+1:end_g2]))

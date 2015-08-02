@@ -1,29 +1,38 @@
-
 import numpy as np
 from mpi4py import MPI
 from scipy.linalg import toeplitz
 from toeplitz_decomp import *
 import itertools
-def block_toeplitz_par(a,b,pad):
-	comm = MPI.COMM_WORLD
-	size  = comm.Get_size()
-	rank = comm.Get_rank()
-	n=a.shape[1]/b
+def block_toeplitz_par(file_name,n,b,pad):
+	g1=np.zeros(shape=(b,size_node), dtype=complex)
+	g2=np.zeros(shape=(b,size_node), dtype=complex)
+	a=np.zeros(b*size_node, dtype=complex)
+	temp=np.zeros(shape=(b,b), dtype=complex)
+	l=np.zeros(shape=(0,0), dtype=complex)
 	size_node_temp=(n//size)*b
 	size_node=size_node_temp
 	if rank==size-1:
 		size_node = (n//size)*b + (n%size)*b
 	start = rank*size_node_temp
-	end = min(start+size_node, n*b)
-	g1=np.zeros(shape=(b,size_node), dtype=complex)
-	g2=np.zeros(shape=(b,size_node), dtype=complex)
-	temp=np.zeros(shape=(b,b), dtype=complex)
-	l=np.zeros(shape=(0,b), dtype=complex)
-	#for simulated data that the first matrix is toeplitz
-	#c=toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist())
-	c=myBlockChol(a[0:b,0:b],1)
+	file_offset = int(start * data_type_size*b)
+	end = min(start+size_node, n*b)	
+	comm = MPI.COMM_WORLD
+	size  = comm.Get_size()
+	rank = comm.Get_rank()
+	mpi_file = MPI.File.Open(comm, file_name)
+	data_type_size = np.dtype("complex").itemsize
+	mpi_file.Seek(file_offset)
+	mpi_file.Read([a, MPI.COMPLEX])
+	np.reshape(a,[b,size_node],order='F')
+	#if the first matrix is toeplitz:
+	#firstblock=inv(toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist()))
+	if rank==0:
+		firstblock=inv(np.linalg.cholesky(a[:b,:b]))
+	else:
+		firstblock=np.zeros(shape=(b,b), dtype=complex)
+	firstblock=comm.bcast(firstblock ,root=0)		
 	for j in xrange(0,size_node/b): 
-		g2[:,j*b:(j+1)*b]= -np.dot(inv(c),a[0:b,start+j*b:start+(j+1)*b]) 
+		g2[:,j*b:(j+1)*b]= -np.dot(firstblock,a[0:b,start+j*b:start+(j+1)*b]) 
 		g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]
 	empty=0
 	for i in xrange(1,n+n*pad):    
