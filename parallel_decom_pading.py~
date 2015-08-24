@@ -4,11 +4,10 @@ from scipy.linalg import toeplitz
 from toeplitz_decomp import *
 import itertools
 def block_toeplitz_par(file_name,n,b,pad):
-	g1=np.zeros(shape=(b,size_node), dtype=complex)
-	g2=np.zeros(shape=(b,size_node), dtype=complex)
-	a=np.zeros(b*size_node, dtype=complex)
-	temp=np.zeros(shape=(b,b), dtype=complex)
-	l=np.zeros(shape=(0,b), dtype=complex)
+	comm = MPI.COMM_WORLD
+	size  = comm.Get_size()
+	rank = comm.Get_rank()
+	data_type_size=16 #complex has 16 bytes
 	size_node_temp=(n//size)*b
 	size_node=size_node_temp
 	if rank==size-1:
@@ -16,14 +15,11 @@ def block_toeplitz_par(file_name,n,b,pad):
 	start = rank*size_node_temp
 	file_offset = int(start * data_type_size*b)
 	end = min(start+size_node, n*b)	
-	comm = MPI.COMM_WORLD
-	size  = comm.Get_size()
-	rank = comm.Get_rank()
-	mpi_file = MPI.File.Open(comm, file_name)
-	data_type_size = np.dtype("complex").itemsize
-	mpi_file.Seek(file_offset)
-	mpi_file.Read([a, MPI.COMPLEX])
-	np.reshape(a,[b,size_node],order='F')
+	g1=np.zeros(shape=(b,size_node), dtype=complex)
+	g2=np.zeros(shape=(b,size_node), dtype=complex)
+	temp=np.zeros(shape=(b,b), dtype=complex)
+	l=np.zeros(shape=(0,b), dtype=complex)
+	a = np.memmap(file_name, dtype='complex', mode='r',offset=file_offset,shape=(b,size_node),order='F')
 	#if the first matrix is toeplitz:
 	#firstblock=inv(toeplitz_decomp(np.array(a[0:b,0]).reshape(-1,).tolist()))
 	if rank==0:
@@ -32,9 +28,10 @@ def block_toeplitz_par(file_name,n,b,pad):
 		firstblock=np.zeros(shape=(b,b), dtype=complex)
 	firstblock=comm.bcast(firstblock ,root=0)		
 	for j in xrange(0,size_node/b): 
-		g2[:,j*b:(j+1)*b]= -np.dot(firstblock,a[0:b,start+j*b:start+(j+1)*b]) 
+		g2[:,j*b:(j+1)*b]= -np.dot(firstblock,a[0:b,j*b:(j+1)*b]) 
 		g1[:,j*b:(j+1)*b]= -g2[:,j*b:(j+1)*b]
 	empty=0
+	#print firstblock,rank
 	for i in xrange(1,n+n*pad):    
 		global_end_g1=min(n*b,(n+n*pad-i)*b)
 		start_g1=start
@@ -68,7 +65,7 @@ def block_toeplitz_par(file_name,n,b,pad):
 			g0_2=comm.bcast(g0_2,root=0)
 			if empty:
 				continue
-			if g0_2.all()==0:
+			if np.count_nonzero(g0_2[:,0:length_g])==0:
 				g2[:,0:length_g]=-g2[:,0:length_g]
 				continue		
 			sigma=np.dot(np.conj(g0_2.T),g0_2)
